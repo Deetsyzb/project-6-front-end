@@ -9,30 +9,30 @@ import { Grid } from "@mui/material";
 
 import MyNavbar from "./Navbar";
 import * as TVW from "react-tradingview-widget";
-import Oldchat from "./OldChat";
+import OldChat from "./OldChat";
 import Signin from "./Signin";
 import Rss from "./Rss";
 type MockWebSocket = {
   send: (_: string) => void;
-  onconnect: (fn: OnConnectionCallback) => void;
+  onopen: (fn: OnConnectionCallback) => void;
 };
 
 type OnConnectionCallback = () => void;
 
 function getCookie(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0;i < ca.length;i++) {
-        var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1,c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-    }
-    return null;
+  var nameEQ = name + "=";
+  var ca = document.cookie.split(";");
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == " ") c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
 }
 
-const getToken =  () => {
-  return getCookie("Token") || ""
-}
+const getToken = () => {
+  return getCookie("Token") || "";
+};
 
 const newMockWS = (address): MockWebSocket => {
   console.log(`[MOCK] NOT CONNECT TO ADDRESS : ${address}`);
@@ -64,7 +64,7 @@ const newMockWS = (address): MockWebSocket => {
       }
     },
 
-    onconnect: (cb) => {
+    onopen: (cb) => {
       onConnectionFnList.push(cb);
     },
   };
@@ -85,10 +85,10 @@ const App: React.FC<AppProps> = () => {
   const [token, setToken] = React.useState<string>(getToken());
 
   React.useEffect(() => {
-    const _socket = newMockWS("mockhost:65336");
-    _socket.onconnect(() => {
+    const _socket =true ? new WebSocket("wss://localhost:8080/ws") : newMockWS("mockhost:65336");
+    _socket.onopen = () => {
       setSocket(_socket);
-    });
+    };
   }, []);
 
   return (
@@ -97,22 +97,20 @@ const App: React.FC<AppProps> = () => {
         <Signin />
       ) : (
         <>
-        
           <MyNavbar setTicker={setTicker} />
           <div className="div-container">
-          
-          <TradingViewWidget
-            symbol={ticker}
-            theme="Dark"
-            hide_side_toolbar={false}
-            allow_symbol_change={false}
+            <TradingViewWidget
+              symbol={ticker}
+              theme="Dark"
+              hide_side_toolbar={false}
+              allow_symbol_change={false}
             />
-            
-              <Oldchat token={token} ticker={ticker} socket={socket}/> 
-          <div className ="div-element2">
-          <Rss/>    
+
+            <OldChat token={token} ticker={ticker} socket={socket} />
+            {/* <div className="div-element2">
+              <Rss />
+            </div> */}
           </div>
-          </div>  
         </>
       )}
     </>
