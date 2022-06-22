@@ -4,6 +4,7 @@ import * as ScrollToBottom from 'react-scroll-to-bottom';
 import './App.css';
 
 import { MAny } from '../utils/my-types';
+import axios from 'axios';
 
 // import { sendMessageToTickerRoom } from "./App";
 type ChatProps = {
@@ -95,18 +96,39 @@ const ChatFooter = ({ socket, ticker, token, setMessageList }) => {
 const Chat: React.FC<ChatProps> = ({ socket, ticker, token }) => {
   const [messageList, setMessageList] = useState<Message[]>([]);
 
+
+
   console.log(`Chat`);
+
+  useEffect(()=>{
+  axios.get("https://localhost:8080/getChatHistory").then((res)=>{
+    console.log("axios, getchathistory", res)
+  })
+  })
+
   useEffect(() => {
+
     console.log('Chat use effect []');
     console.log(socket);
     const broadcastReceiver = async (event: MessageEvent) => {
+      console.log(event)
+      //converting blob to string, then string to obj
       const data = await event.data;
+      const blob = await data.text()
       console.log(`[Socket Message Received]`);
-      console.log(data);
-      if (data.event === 'broadcast') {
+      const obj = JSON.parse(blob);
+      const messages = obj.message
+      const name = obj.token
+      const time = obj.time
+
+      //using obj instand of event
+      if (obj.event === 'send-to-ticker-room') {
         console.log('broadcasting message');
         try {
-          const message = data.message;
+          const message = {
+            author: name,
+            message: messages,
+            time: time,}
           setMessageList((list) => {
             return [...list, message];
           });
